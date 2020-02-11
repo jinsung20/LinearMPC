@@ -1,5 +1,7 @@
 # LinearMPC
-model predictive control for a linear system.
+implementation of model predictive control for a linear system.
+
+The plant model used in the simulation code is the quadruple-tank process as a MIMO linear system [1].
 
 For a quadratic programming solver, this sample code employes 'quadprog' included in MATLAB optimization toolbox, but any other optimization solvers for linear or convex problem can be configured for this program. 
 
@@ -7,3 +9,6 @@ For a quadratic programming solver, this sample code employes 'quadprog' include
 MATLAB Optimization Toolbox
 or
 cvx, etc.
+
+## Reference
+[1] K. H. Johansson, "The quadruple-tank process: a multivariable laboratory process with an adjustable zero," IEEE Transactions on Control Systems Technology, vol. 8, no. 3, pp. 456-465, May 2000.
