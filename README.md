@@ -5,3 +5,5 @@ For a quadratic programming solver, this sample code employes 'quadprog' include
 
 ## Requirements
 MATLAB Optimization Toolbox
+or
+cvx, etc.
