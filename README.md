@@ -5,6 +5,9 @@ The plant model used in the simulation code is the quadruple-tank process as a M
 
 For a quadratic programming solver, this sample code employes 'quadprog' included in MATLAB optimization toolbox, but any other optimization solvers for linear or convex problem can be configured for this program. 
 
+## Simulation Result
+![alt text](https://github.com/jinsung20/LinearMPC/blob/master/Result.png)
+
 ## Requirements
 MATLAB Optimization Toolbox
 or
