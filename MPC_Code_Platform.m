@@ -1,5 +1,7 @@
 % MPC Code
 % Jinsung Kim
+% Feb. 06. 2020 : full state measurement
+% Feg. 19. 2020 : Kalman filter based observer
 
 clear; clc;
 
@@ -118,8 +120,13 @@ Dcd = zeros(4,2);
 
 % GenAugSysMatrix
 [Psi, Gamma, Theta, Phi] = GenAugSysMatrix(Ad, Bd, Bwd, Czd, Np, Nu);
-%%
 [Psi_c, Gamma_c, Theta_c] = GenAugSysMatrix(Ad, Bd, Bwd, Ccd, Np, Nu);
+
+% Kalman filter gain
+W = diag([1 1 1 1]);
+V = diag([0.01 0.01]);
+Kob = dlqr(Ad', Cyd', W, V)';
+
 
 % Hessian matrix
 P = Theta' * QQ * Theta + RR;
@@ -128,6 +135,7 @@ P = Theta' * QQ * Theta + RR;
 x0 = [0 0 0 0]';
 u0 = [0 0]';
 y0 = Cyd * x0;
+x0_hat = x0;
 
 %% Control Loop
 Tend = length(ref)-Np;
@@ -139,27 +147,31 @@ t = 0:Ts:(size(ref,1)*Ts);
 
 x = x0;
 u = u0;
-y = y0;
+x_hat = x0_hat;
+y_prev = y0;
 
 X_REC = x;
-Y_REC = y;
+Y_REC = y_prev;
 U_REC = u;
 
 for k = 1 : length(t)-2
     disp(['k = ', num2str(k)]);
-    y = Cyd * x;
     
     refSmpl = ref(k,:);
     refHrznCol = repmat(refSmpl, 1, Np)';
     
+    y = Cyd * x;
+    x_hat = Ad * x_hat + Bd * u + Kob * (y_prev - Cyd*x_hat);
     y_prev = y;
-    err = refHrznCol - (Psi * x + Gamma * u);
+    
+    err = refHrznCol - (Psi * x_hat + Gamma * u);
     q = - Theta' * QQ * err;
     
-    [G, h] = GenConstMatrix(Bd, Ccd, Np, Nu, x, u, Psi_c, Gamma_c, Theta_c, u_min, u_max, z_min, z_max, du_min, du_max);
+    [G, h] = GenConstMatrix(Bd, Ccd, Np, Nu, x_hat, u, Psi_c, Gamma_c, Theta_c, u_min, u_max, z_min, z_max, du_min, du_max);
     P = (P + P')/2;
-    du_QP = quadprog(P, q, G, h, [], [], [], [], [], QP_Opt);
-    zz = Psi * x + Gamma * u + Theta * du_QP;
+%     du_QP = quadprog(P, q, G, h, [], [], [], [], [], QP_Opt);
+    du_QP = myBQP(P, q, G, h);
+    zz = Psi * x_hat + Gamma * u + Theta * du_QP;
 
     z_Pred = reshape(zz, [nz, Np])';
     u_Pred = u + cumsum(u);
@@ -169,7 +181,8 @@ for k = 1 : length(t)-2
     z = zz(1:nz, :);
     u = u + du(1, :)';
     dis = disturbance(k,:)';
-
+    
+    % Actual Plant
 %     x = Ad * x + Bd * u;
 %     x = Ad * x + Bd * (u + dis);
     x = Ad * x + Bd * u + Bd * dis;
@@ -214,15 +227,19 @@ stairs(T_REC,X_REC(1,:), 'b-', 'linewidth', 2)
 stairs(T_REC, REF_REC(1, :), 'm-.', 'linewidth', 1)
 ylabel('h_1 [cm]')
 title('h1')
+legend('Measured','Reference');
 grid on;
+ylim([7, 15]);
 
 subplot(3,2,4)
 hold on
 stairs(T_REC,X_REC(2,:), 'b-', 'linewidth', 2)
 stairs(T_REC, REF_REC(2, :), 'm-.', 'linewidth', 1)
 ylabel('h_2 [cm]')
+legend('Measured','Reference');
 title('h2')
 grid on;
+ylim([18.5, 20]);
 
 subplot(3,2,5)
 hold on
