@@ -1,5 +1,5 @@
 # LinearMPC
-implementation of model predictive control for a linear system.
+MATLAB implementation of model predictive control for a linear system.
 
 The plant model used in the simulation code is the quadruple-tank process as a MIMO linear system [1].
 
